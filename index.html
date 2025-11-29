@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende Como Eres | Quiz de Estilos de Aprendizaje</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc; /* Fondo claro para un look limpio */
+        }
+        .quiz-option {
+            transition: all 0.2s;
+        }
+        .quiz-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        /* Color de marca: Azul vibrante para el CTA */
+        .brand-color {
+            background-color: #1d4ed8; 
+        }
+        .brand-color:hover {
+            background-color: #1e40af;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Contenedor Principal del Quiz -->
+    <div id="quiz-container" class="w-full max-w-lg bg-white rounded-xl shadow-2xl p-6 md:p-10 border border-gray-100">
+
+        <!-- Encabezado y Barra de Progreso -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 leading-tight">Aprende Como Eres</h1>
+            <p class="text-lg text-gray-600 mt-2">Descubre tu método ideal de inglés en 60 segundos.</p>
+            <div id="progress-bar" class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                <div id="progress-indicator" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </header>
+
+        <!-- Área de Preguntas -->
+        <div id="question-area">
+            <!-- Las preguntas se inyectarán aquí por JavaScript -->
+        </div>
+
+        <!-- Área de Resultados (Oculta al inicio) -->
+        <div id="result-area" class="hidden text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">¡Felicidades!</h2>
+            <p class="text-xl text-gray-700 mb-4 font-semibold" id="result-style-title"></p>
+            
+            <div id="result-description-card" class="p-6 rounded-lg bg-blue-50 border-blue-600 border-l-4 mb-8">
+                <p class="text-gray-600 text-left" id="result-description"></p>
+            </div>
+
+            <!-- CTA para Captura de Email -->
+            <form id="email-form" class="space-y-4">
+                <p class="text-lg font-semibold text-gray-800">Recibe tu Guía Esencial (eBook) personalizada con las 3 técnicas que sí funcionan para ti:</p>
+                <input type="email" id="user-email" required placeholder="Tu mejor correo electrónico" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="w-full brand-color text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
+                    ¡Enviar mi eBook Personalizado!
+                </button>
+            </form>
+            <p id="email-message" class="mt-4 p-3 bg-green-100 text-green-700 border border-green-300 rounded-lg hidden font-semibold">¡Revisa tu bandeja de entrada! Tu eBook está en camino. ¡Aprenderás como eres!</p>
+        </div>
+
+    </div>
+
+    <script>
+        // Estructura de Datos para las Preguntas
+        // V=Visual, A=Auditivo, R=Lectura/Escritura, K=Kinestésico
+        const quizData = [
+            {
+                question: "¿Cuando tienes que aprender a usar un nuevo software o aplicación, prefieres...?",
+                options: [
+                    { text: "Ver un video tutorial rápido o un 'tour visual' de la interfaz.", value: "V" },
+                    { text: "Leer el manual, la sección de ayuda o el tutorial paso a paso.", value: "R" },
+                    { text: "Abrir la aplicación inmediatamente y empezar a tocar los botones hasta que entiendes cómo funciona.", value: "K" },
+                    { text: "Que un amigo o experto te explique las funciones clave mientras hablas con él.", value: "A" }
+                ]
+            },
+            {
+                question: "Estás en una clase o reunión. ¿Cómo tomas notas de la información importante?",
+                options: [
+                    { text: "Dibujas mapas mentales, usas resaltadores de diferentes colores o haces diagramas.", value: "V" },
+                    { text: "Casi no tomas notas; prefieres concentrarte en escuchar y participar en la discusión.", value: "A" },
+                    { text: "Escribes frases completas, listas de puntos clave y organizas la información en texto puro.", value: "R" },
+                    { text: "Te mueves, garabateas o haces pausas frecuentes; necesitas escribir las ideas a mano para 'sentirlas'.", value: "K" }
+                ]
+            },
+            {
+                question: "Cuando intentas memorizar una nueva palabra en inglés, ¿qué es lo más fácil de recordar?",
+                options: [
+                    { text: "La imagen mental que asociaste con esa palabra o cómo estaba escrita en el papel.", value: "V" },
+                    { text: "Cómo sonaba la palabra cuando la escuchaste en una canción o en la explicación de alguien.", value: "A" },
+                    { text: "La lista donde la escribiste o la definición exacta que leíste en el diccionario.", value: "R" },
+                    { text: "El movimiento o la acción que hiciste mientras decías la palabra, o la situación en la que la usaste.", value: "K" }
+                ]
+            },
+            {
+                question: "Para relajarte o entretenerte, ¿cuál de estas actividades te atrae más?",
+                options: [
+                    { text: "Ver una película, una serie o un documental, prestando atención a los efectos visuales.", value: "V" },
+                    { text: "Escuchar música, podcasts o audiolibros durante un buen rato.", value: "A" },
+                    { text: "Leer un libro, una novela, artículos o un blog detallado.", value: "R" },
+                    { text: "Practicar un deporte, ir al gimnasio, cocinar o hacer una manualidad.", value: "K" }
+                ]
+            },
+            {
+                question: "Tienes que dar indicaciones a alguien que no conoce el camino. ¿Qué haces?",
+                options: [
+                    { text: "Le dibujas un mapa rápido o le envías una captura de pantalla del recorrido.", value: "V" },
+                    { text: "Le dices las indicaciones paso a paso, en orden, con instrucciones verbales claras.", value: "A" },
+                    { text: "Le escribes un listado detallado de las calles y los giros por escrito.", value: "R" },
+                    { text: "Lo acompañas durante una parte del recorrido, gesticulas mucho o usas referencias físicas.", value: "K" }
+                ]
+            }
+        ];
+
+        // Descripciones de Resultados
+        const resultDescriptions = {
+            "V": {
+                title: "¡Eres un/a Estudiante VISUAL!",
+                description: "Tu cerebro aprende mejor cuando la información está ligada a imágenes, diagramas y colores. Necesitas VER la estructura del idioma. Te enviamos la Guía Esencial con el 'Método Visual' y las 3 técnicas que te darán fluidez rápida.",
+                color: "border-green-600", 
+            },
+            "A": {
+                title: "¡Eres un/a Estudiante AUDITIVO!",
+                description: "Tu cerebro procesa el idioma a través del sonido. Aprendes mejor escuchando, repitiendo en voz alta, usando música y podcasts. Necesitas OÍR el inglés. Te enviamos la Guía Esencial con el 'Método Auditivo' y la técnica de Shadowing para dominar el acento.",
+                color: "border-indigo-600",
+            },
+            "R": {
+                title: "¡Eres un/a Estudiante de LECTURA/ESCRITURA!",
+                description: "Tu cerebro necesita la estructura del texto. Aprendes mejor tomando notas detalladas, haciendo resúmenes y reescribiendo conceptos. Necesitas ORGANIZAR el inglés. Te enviamos la Guía Esencial con el 'Método de Estructura' y tips para la memorización efectiva de reglas.",
+                color: "border-yellow-600",
+            },
+            "K": {
+                title: "¡Eres un/a Estudiante KINESTÉSICO!",
+                description: "Tu cerebro necesita el movimiento y la acción. Aprendes mejor con juegos de rol, simulaciones, y usando el idioma mientras haces algo (memoria muscular). Necesitas VIVIR el inglés. Te enviamos la Guía Esencial con el 'Método Kinestésico' y los ejercicios de Respuesta Física Total.",
+                color: "border-red-600", 
+            }
+        };
+
+        // Variables de Estado
+        let currentQuestionIndex = 0;
+        let score = { "V": 0, "A": 0, "R": 0, "K": 0 };
+        
+        // Elementos del DOM
+        const questionArea = document.getElementById('question-area');
+        const resultArea = document.getElementById('result-area');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const resultStyleTitle = document.getElementById('result-style-title');
+        const resultDescription = document.getElementById('result-description');
+        const resultDescriptionCard = document.getElementById('result-description-card');
+        const emailForm = document.getElementById('email-form');
+        const emailMessage = document.getElementById('email-message');
+
+
+        // Función para renderizar la pregunta actual
+        function renderQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showResult();
+                return;
+            }
+
+            const data = quizData[currentQuestionIndex];
+            
+            // Renderiza el contenido HTML de la pregunta
+            questionArea.innerHTML = `
+                <div class="mb-6">
+                    <p class="text-sm font-semibold text-blue-600 mb-2">PREGUNTA ${currentQuestionIndex + 1} DE ${quizData.length}</p>
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">${data.question}</h3>
+                </div>
+                <div id="options-list" class="space-y-4">
+                    ${data.options.map((option, index) => `
+                        <button 
+                            class="quiz-option w-full text-left p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 font-medium"
+                            data-value="${option.value}"
+                            onclick="handleAnswer(this, '${option.value}')"
+                        >
+                            <span class="font-bold text-blue-600 mr-2">${String.fromCharCode(65 + index)}.</span> ${option.text}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            updateProgressBar();
+        }
+
+        // Función para manejar la selección de respuesta
+        function handleAnswer(selectedButton, value) {
+            // Deshabilita todos los botones
+            const buttons = document.querySelectorAll('.quiz-option');
+            buttons.forEach(btn => btn.disabled = true);
+
+            // Resalta la opción seleccionada
+            selectedButton.classList.remove('bg-gray-50', 'hover:bg-blue-100');
+            selectedButton.classList.add('brand-color', 'text-white', 'shadow-lg');
+            selectedButton.style.backgroundColor = 'var(--brand-color-dark)';
+
+            // Actualiza la puntuación
+            score[value]++;
+
+            // Espera un momento antes de pasar a la siguiente pregunta
+            setTimeout(() => {
+                currentQuestionIndex++;
+                renderQuestion();
+            }, 300);
+        }
+
+        // Función para actualizar la barra de progreso
+        function updateProgressBar() {
+            const percentage = ((currentQuestionIndex) / quizData.length) * 100;
+            progressIndicator.style.width = ${percentage}%;
+        }
+
+        // Función para mostrar el resultado final
+        function showResult() {
+            questionArea.classList.add('hidden');
+            resultArea.classList.remove('hidden');
+            
+            let maxScore = 0;
+            let resultStyle = "";
+
+            // Determinar el estilo con la puntuación más alta
+            for (const style in score) {
+                if (score[style] > maxScore) {
+                    maxScore = score[style];
+                    resultStyle = style;
+                }
+            }
+            
+            // Manejo de empates (priorizamos V, A, K como desempate)
+            const tiedStyles = Object.keys(score).filter(key => score[key] === maxScore);
+            if (tiedStyles.length > 1) {
+                if (tiedStyles.includes('V')) resultStyle = 'V';
+                else if (tiedStyles.includes('A')) resultStyle = 'A';
+                else if (tiedStyles.includes('K')) resultStyle = 'K'; 
+                else resultStyle = tiedStyles[0]; // Desempate por orden
+            }
+            
+            // Fallback (por si acaso)
+            if (!resultStyle) resultStyle = 'V'; 
+
+            // Obtener la descripción del resultado
+            const result = resultDescriptions[resultStyle];
+
+            // Actualizar la UI con el resultado
+            resultStyleTitle.textContent = result.title;
+            resultDescription.textContent = result.description;
+            
+            // Aplicar el color de borde de la tarjeta de resultado
+            resultDescriptionCard.classList.remove('border-blue-600');
+            resultDescriptionCard.classList.add(result.color, 'border-l-4');
+
+            // Asegurar que la barra de progreso esté completa
+            updateProgressBar();
+        }
+        
+        // Manejar el envío del formulario de email
+        emailForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('user-email').value;
+            const resultStyleText = resultStyleTitle.textContent;
+            
+            // --- CÓDIGO DE INTEGRACIÓN DE BACKEND ---
+            // Aquí deberías enviar por fetch() el 'email' y el 'resultStyleText' 
+            // a tu sistema para que dispare el envío del eBook correspondiente.
+            
+            console.log(Email capturado: ${email}. Estilo: ${resultStyleText});
+
+            // Simular éxito y ocultar el formulario
+            emailForm.classList.add('hidden');
+            emailMessage.classList.remove('hidden');
+        });
+
+        // Inicializar el quiz
+        window.onload = renderQuestion;
+    </script>
+
+</body>
+</html>
